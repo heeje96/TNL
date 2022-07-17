@@ -17,7 +17,7 @@
 
 - 리스트를 print 할 때
 
-  ```python``````
+  ```python
   #기존
   for i in a:
   	print(i, end="")
