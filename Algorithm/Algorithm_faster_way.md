@@ -15,7 +15,7 @@
 
   
 
-- 리스트를 print 할 때
+- 리스트를 print 할 때 print를 반복하는 것보다, 리스트를 만든 뒤 print해보자
 
   ```python
   #기존
@@ -24,7 +24,21 @@
       
   # 40ms 단축
   print(''.join(a))
+  
+  #------
+
+  #기존
+  a = int(input())
+  for i in range(a, -1, -1):
+    print(i, end = " ")
+
+  # 40ms 단축 
+  n = int(input())
+  result = ""
+  for i in range(n+1):
+    result += f"{n-i} "
+  print(result)
+  
   ```
 
   
-
