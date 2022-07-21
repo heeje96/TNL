@@ -1,6 +1,9 @@
-### filter 함수
+### filter 
 
-- 맵오브젝트 = filter({참거짓판별}, {리스트})
+- filter(참거짓판별 함수, 리스트) = filter object
+  - 리스트의 참 거짓을 판별해주는 함수
+  - filter를 쓰는 경우엔 몇 갠지 알기 어려우니 map처럼 받기 어렵다.
+
 
 ```python
 def odd(n):
@@ -13,11 +16,20 @@ print(list(filter(odd, n)))
 
 ### zip
 
+- zip(리스트A, 리스트B) = (리스트A[0], 리스트B[0]), (리스트A[1], 리스트B[1]), .....=zip object
+  - 리스트를 튜플로 묶어주는 함수
+
 ```python
 a = [1,2,3]
 b = [3,2,1]
 print(list(zip(a, b)))
 ```
+
+
+
+lambda
+
+- 익명함수, 변수에 저장해서 다량의 데이터를 손볼때 자주쓰인다.
 
 
 
