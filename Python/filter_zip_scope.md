@@ -44,3 +44,18 @@ lambda
   - global
   - built-in 
     - ex) print()
+
+
+
+### Module
+
+```python
+#모듈
+import module
+from module import var, function, Class
+from module import *
+#패키지
+from package import module
+from package.module import var, function, Class
+```
+
