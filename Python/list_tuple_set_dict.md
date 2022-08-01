@@ -21,31 +21,38 @@
 | ------------- | ---------------------------- | ----------------- | ----------------- | ------------------------------- |
 |               | 가변                         | 불변              | 가변              | 가변                            |
 | 선언          | l = []                       | t = (seq)         | s = {seq}         | d = {}                          |
-|               | l = list()                   |                   | s = set()         | d = dict()                      |
+|               | l = list()                   | t =tuple()        | s = set()         | d = dict()                      |
 | 추가          | l.append(1)                  |                   |                   |                                 |
 |               | l.insert(2, 'data')          |                   |                   |                                 |
 |               |                              |                   | s.add(5)          |                                 |
-|               |                              |                   | s.update([6,7,8]) | d.update(d2)                    |
-| 삭제          | del l[index]                 |                   |                   |                                 |
-|               | l.remove(삭제할값)           |                   | s.remove(8)       |                                 |
-|               | l.pop()                      |                   | s.pop()           | d.pop()                         |
+|               |                              |                   | s.update([6,7,8]) | d.update(dic)                   |
+|               | l.extend(iterable)           |                   |                   |                                 |
+| 삭제          | l.pop()                      |                   | s.pop()           | d.pop(key, [default])           |
+|               | l.remove(x)                  |                   | s.remove(x)       |                                 |
+|               |                              |                   |                   |                                 |
 |               | l.clear()                    |                   | s.clear()         | d.clear()                       |
+|               | del l[index]                 |                   | s.discard(elem)   |                                 |
 | list 병합     | l.extend(new_list)           |                   |                   |                                 |
 |               | l+= new_list                 |                   |                   |                                 |
-| 복사값 대입   | l.copy() / list(l) / list(l) |                   |                   | d.copy()                        |
-| 찾기          | l.index('data')              | t.index(2)        |                   |                                 |
+| 복사값 대입   | l.copy() #얕은               |                   | s.copy() #얕은    | d.copy() #얕은                  |
+|               | l = li #얕은                 |                   |                   |                                 |
+|               | l = li[ : ] #다른주소..?     |                   |                   |                                 |
+|               | l = copy.deepcopy(list)      |                   |                   |                                 |
+| 찾기          | l.index(element, start, end) | t.index(2)        |                   |                                 |
 |               | 'data' in l                  |                   |                   |                                 |
-|               | l.count('data')              |                   |                   |                                 |
+|               |                              |                   |                   | d.get(key, [default])           |
+| 갯수 찾기     | l.count('data')              |                   |                   |                                 |
 | 문자열 생성   | ", ".join(l)                 |                   |                   | str(d)                          |
 | 정렬          | l.sort()                     |                   |                   |                                 |
 |               | sorted(l)                    |                   |                   |                                 |
 | 개수          | len(l)                       | len.(t)           |                   | len(d)                          |
 |               | l.count                      | t.count           |                   |                                 |
 | 최대값/최소값 | max(l) / min(l)              | max.(t) / min.(t) |                   |                                 |
+| 반대로        | l.reverse()                  |                   |                   |                                 |
 | 기타          |                              |                   | \| & - ^ //집합   | d.keys()                        |
-|               |                              |                   |                   | d.values()                      |
-|               |                              |                   |                   | d.items()                       |
-|               |                              |                   |                   | d.fromkeys()                    |
+|               |                              |                   | s.isdisjoint(set) | d.values()                      |
+|               |                              |                   | s.issubset(set)   | d.items()                       |
+|               |                              |                   | s.issuperset(set) | d.fromkeys()                    |
 |               |                              |                   |                   | d.get(key, default=None)        |
 |               |                              |                   |                   | d.setdefault(key, default-None) |
 
