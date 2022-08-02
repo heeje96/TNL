@@ -89,6 +89,22 @@ HTML 태그가 특정 목적, 역할 및 의미적 가치(semantic value)를 가
 
 
 
+## CSS
+
+**문법**
+
+```css
+h1{
+    width: 200px
+}
+
+selector(선택자){
+    property(속성): value(값)
+}
+```
+
+
+
 
 
 **css 선택자**(Selector)
