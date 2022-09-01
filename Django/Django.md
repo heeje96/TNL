@@ -54,7 +54,7 @@
 
 ### 디자인패턴 요약도
 
-![Untitled](Django%206e2199b8577845ba9fe087029e262d59/Untitled.png)
+![Untitled](assets/django_01.png)
 
 1. URLS 경로설정
 2. 처리데이터
@@ -73,17 +73,19 @@ source venv/Scripts/activate  #가상환경생성
 pip install django==3.2.15    #장고설치
 pip freeze > requirements.txt #설치된 버전리스트를 저장하는 txt파일 생성
 
+pip install -r requirements.txt #requirements에 있는 내용 설치
+
 deactivate #가상환경 해제
 
 django-admin startproject firstpjt . #프로젝트 이름에는 사용중인 키워드 및 '-'사용불가
 #'.'을 붙이지 않을 경우 현재 디렉토리에 프로젝트 디렉토리를 새로 생성하게 됨 
 
-python manage.py runserver #서버 구동
-# http://127.0.0.1:8000/를 통해 확인
-
 python manage.py startapp articles #애플리케이션(앱)생성, 일반적으로 복수형으로 작성한다.
 # $INSTALLED_APPS에 생성 후 적어야함$ 미리 작성하고 생성하면 앱이 생성되지 않음
 # articles = 앱이름
+
+python manage.py runserver #서버 구동
+# http://127.0.0.1:8000/를 통해 확인
 ```
 
 ### 프로젝트 구조
@@ -142,6 +144,13 @@ URL → VIEW → TEMPLATE로 데이터흐름을 이해하기
 1. `urls.py` 파일 속 path를 설정해준다.
     1. `from articles import views` 
     2. `path(’index/’, views.index)`  path(경로이름, 함수이름)
+    
+    ```bash
+    # urls.py
+    from articles import views
+    path('index/', views.index)
+    ```
+    
 2. #경로있으면 views.py로가서 index처리한다.  #경로없으면 404
 3. `views.py`에서 `return render(request, ‘index.html’)` 하면 Template로 넘어간다.
    
@@ -279,12 +288,358 @@ path('hello/<name>/', views.hello),
 - 하나의 프로젝트의 여러앱이 존재한다면, 각각의 앱 안에 urls.py를 만들고 프로젝트 urls.py에서 각 앱의 urls.py파일로 URL 매핑을 위탁할 수 있음
 - 각각의 app 폴더 안에 urls.py를 작성하고 다음과 같이 수정 진행
 
-### 과제
+---
 
-- 부트스트랩을 열어서, 네브바를 찾아서 첫번째 네브바를 디너html에 적용하세요.
+## Namespace의 필요성
 
-```bash
+서로 다른 앱에서 동일한 URL이름을 사용하는 경우에도 이름이 지정된 URL을 고유하게 사용할 수 있음
+
+- app_name attribute를 작성해 URL namespace를 생성
+  
+    ```python
+    # articles/urls.py
+    app_name = 'articles'
+    urlpatterns = []
+    
+    #이후 html에서 이런식으로 사용해야한다. #아닐 시 에러
+    {% url 'index' %} --> {% url 'articles:index' %}
+    ```
+    
+- 오류 NoReverseMatch = url태그 오류
+- 장고는 기본적으로 app_name/templates/ 경로에 있는 templates파일들만 찾을 수 있으며, settings.py의 INSTALLED_APPS에 작성한 app순서로 template을 검색 후 렌더링 함\
+- 그래서, templates의 기본경로 자체를 변경할 수 없기 때문에 물리적인 이름공간을 만들어야 한다.
+
+# Model
+
+## Database
+
+### 스키마 (Schema)
+
+- 뼈대
+- 데이터베이스에서 자료의 구조, 표현방법, 관계등을 정의한 구조
+
+| column | dataType |
+| --- | --- |
+| id | INT |
+| name | TEXT |
+
+### 테이블(Table)
+
+- 필드와 레코드를 사용해 조직된 데이터요소들의 집합
+- 관계(Relation)라고도 부름
+1. 필드(field): 속성, 컬럼(colum), 열
+    - 고유한 데이터 형식이 지정됨
+2. 레코드(record): 튜플, 행(Row)
+    - 실제 데이터
+3. PK(Primary Key)
+    - 기본 키
+    - 각 레코드의 고유한 값(식별자로 사용)
+    - 기술적으로 다른 항목과 **절대로 중복될 수 없는 단일 값(unique)**
+    - 테이블간 관계 설정 시 주요하게 활용됨
+4. 쿼리(Query)
+    - 데이터를 추출, 조회하기 위한 명령어
+    - “Query를 날린다” → 데이터베이스를 조작하다
+    
+
+## Model
+
+개요
+
+- Django는 Model을 통해 데이터에 접근하고 조작
+- 사용하는 데이터들의 필수적인 **필드(Colum)**들과 **동작(OOP관점에서 메서드)**을 포함
+- 저장된 데이터베이스의 구조(layout)
+- 일반적으로 각각의 모델은 하나의 데이터베이스 테이블에 매핑(mapping)
+    - **모델클래스 1개 == 데이터베이스 테이블 1개**
+    - 독립적인 데이터 베이스를 장고로 **간접적으로 사용**함
+    
+
+### 모델 이해하기
+
+- [models.py](http://models.py) 작성
+    - 모델클래스를 작성하는 것은 데이터베이스 테이블의 스키마를 정의하는 것
+    - “모델클래스 == 테이블 스키마”
+    - 아이디 컬럼은 테이블 생성시 장고가 자동으로 생성
+
+```python
+# models.py 작성
+
+#클래스를 만드는것 = 테이블을 만드는 것
+class Article(models.Model):
+		title = models.CharField(max_length) # 타이틀이 필드의 이름, value는 타입이 된다.
+																				 # max_length는 필수 텍스트
+		content = models.TextField() # 길이제한이 긴 텍스트
 
 ```
 
----
+- 각 모델은 `models.Model` 클래스의 서브 클래스
+- 클래스 상속 기반 형태의 Django 프레임 워크 개발 → 잘만들어진 도구를 가져다가 잘 쓰는 것
+- 변수는 DB 필드의 이름, value는 타입이 된다.
+- `CharField(max_length=None, **options)` : 길이의 제한이 있는 문자열을 넣을 때 사용
+- `TextField(**options)` : 글자의 수가 많을 떄 사용
+- `DateTimeField([auto_now_add]=최초생성일자, [auto_now]=최종수정일자)` : 날짜 및 시간
+
+### Migrations
+
+Model을 데이터베이스에 반영하는 것
+
+- **주요 명령어**
+
+```bash
+# 모델과 DB의 동기화
+**$python manage.py makemigrations # 중요! 설계도를 생성하는 일
+$python manage.py migrate # 중요! DB와 동기화하기**
+
+# migrations 파일이 migrate가 제대로 됐는지 확인하는 용도 
+# [X]표시가 있으면 migrate가 완료되었음을 의미한다.
+$python manage.py showmigrations
+
+# 해당 migrations파일이 SQL문으로 어떻게 해석 될 지 미리 확인 할 수 있음
+$python manage.py sqlmigrate articles 0001
+```
+
+- 데이터베이스는 Null값을 기본적으로 추가할 수 없다. Default값을 설정해야한다.
+    1. 다음 화면으로 넘어가서 새 컬럼의 기본 값을 직접 입력하는 방법
+        1. ‘1’을 입력 후 Enter를 누르면, 파이썬의 모듈[timezone]의 메서드[now] 반환 값을 기본으로 사용하게 해줌
+    2. 현재 과정에서 나가고 모델필드에 default속성을 직접 작성하는 방법
+    
+
+### 반드시 기억해야 할 migration 3단계
+
+1. models.py에서 변경사항이 발생하면
+2. migrations파일 생성(설계도 생성)
+   
+    makemigrations **`$python manage.py makemigrations`**
+    
+3. DB 반영 (모델과 DB의 동기화)
+   
+    migrate **`$python manage.py migrate`**
+    
+
+### ORM
+
+Object-Relational-Mapping
+
+- SQL만 알아들을 수 있는 DB가 어떻게 python을 이해할까?
+- 객체지향 프로그래밍 언어를 사용하여 호환되지 않는 유형의 시스템 간에 (Django ↔ DB)데이터를 변환하는 프로그래밍 기술
+- 객체지향 프로그래밍에서 데이터베이스를 연동할 때 데이터베이스와 객체지향 프로그래밍 언어간의 호환되지 않는 데이터를 변환하는 프로그래밍 기법
+- 장고는 내장 ORM을 사용
+- SQL을 사용하지 않고 데이터베이스를 조작할 수 있게 만들어진 매개체
+
+### ORM 장단점
+
+장점: 객체지향적 접근으로 **높은 생산성**
+
+단점: ORM만으로 **세밀한 DB 조작이 어렵다.** 
+
+### [참고] django extensions
+
+`pip install ipython django-extensions`
+
+- 우리의 실습이 간접적으로 도움주는 외부 라이브러리
+- settings.py
+    - installed_apps에 `django_extensions` 등록 #언더바 주의
+- Ipython: 기본 쉘보다 강력한 쉘
+- django-extensions: 확장프로그램 모음, 다양한 확장기능 제공
+
+### [참고] Shell
+
+사용자 ↔ 셸 ↔ 운영체제
+
+사용자와 운영체제 내부의 인터페이스를 감싸는 층
+
+```bash
+# 파이썬 셀 실행법
+$python -i # git bash (windows)
+$python # zsh (macOS)
+
+$ipyton # 강력한 쉘
+```
+
+### 장고 Shell
+
+- 일반 파이썬 쉘은 장고 프로젝트환경에 영향을 줄 수 없어서 장고환경에서는 Django shell을 사용
+
+```bash
+#기본 쉘
+$python manage.py shell 
+
+# django-extension 에서 제공하는 강력한 쉘
+$python manage.py shell_plus #필수적인 것을 미리 import해준다.
+```
+
+### QuerySet API
+
+모델(Article)을 정의하면 데이터를 만들고 읽고 수정하고 지울 수 있는 API를 제공
+
+`Artucle.objects.all( )` = `modelClass.Manager.QuerysetAPI()` 
+
+- `Manager` 는 중간 인터페이스, **여러 메서드를 제공해준다.**
+- `QuerysetAPI()` **”쿼리를 날린다”,** 에서 데이터를 조작할 것이다.
+    - 데이터 베이스에게서 전달 받은  객체목록(데이터 모음)
+        - 순회가 가능한 데이터로써 1개 이상의 데이터를 사용가능 (리스트처럼)
+        - ORM을 통해 만들어진 자료형이며, 필터와 정렬등을 수행가능
+        - 데이터베이스가 단일 객체를 반환할 때는 QuerySet이 아닌 모델의 인스턴스로 반환됨
+
+ 
+
+### CRUD
+
+- Create / Read / Update / Delete
+
+### 데이터 객체를 만드는 3가지 방법
+
+```bash
+#article은 인스턴스 이름! 
+
+In [1]: Article.objects.all() # 저장된 데이터를 한 눈에 볼 수 있음
+out [1]: <QuerySet []> #비어있는 경우
+
+article = Article() #클래스를 통한 인스턴스 생성
+
+article.title = 'first' #변수명과 같은 이름의 인스턴스 변수를 생성 후 값 할당
+article.content = 'django!' 
+article.save() # 객체를 데이터베이스에 저장함.
+							 # save를 호출하기 전에는 DB에 영향을 주지 않는다.
+
+article = Article(title='second', content='django!') #클래스를 통한 인스턴스 생성
+article.save()
+
+Article.objects.create(title='third', content='django!') #한 줄에 save를 포함하여 진행됨
+
+article.id
+article.pk # primary key (=id와 같은 기능을 한다. 장고에서 권장됨)
+
+```
+
+### READ
+
+QuerySet SPI method는 크게 2가지로 분류됨
+
+1. Methods that “return new querysets”
+2. Methods that “do not return querysets” #단일일 때
+
+```bash
+#all()
+#전체 데이터 조회
+Article.objects.all() 
+articles = Article.objects.all()
+for article in articles:
+	...
+
+#get()
+#단일 데이터 조회, **#고유성을 보장하는 조회(primary key)에 사용**
+Article.objects.get(id=1)
+Article.objects.get(pk=1)
+
+#filter()
+# 쿼리셋을 반환함.
+# -> PK를 찾을 때 사용하지 않음,
+#    이유1. 없을 때 오류가 아닌 빈쿼리셋을 전달함
+#    이유2. 쿼리셋에 한 번 더 접근을 해야함
+Article.objects.filter(content='django!')
+
+#field lookup, built-in lookups는 공식문서 참고
+Article.objects.filter(content__contains='ja')
+```
+
+### UPDATE & DELETE
+
+```bash
+#조회
+article = Article.objects.get(pk=1)
+
+#인스턴스 변수를 변경
+article.title = 'byebye'
+
+#저장
+article.save()
+
+#삭제, 삭제 후에는 조회 안됨
+# id 1번이 삭제되면, 이후에 재사용하지 않음 (대부분 문제가 있어서 삭제했기 때문)
+article.delete()
+```
+
+[참고]  `__str__` : 출력을 보기좋게 보여줌
+
+- DB에 영향을 주지 않기 때문에, makemigrations가 필요없음.
+
+```bash
+class Article(models.model):
+		...
+		def __str__(self):
+				return self.title
+```
+
+### READ 캡처
+
+[READ](https://www.notion.so/READ-5757d20020df474c893f1a35f25c2cf2)
+
+### CREATE
+
+1. 사용자의 입력을 받을 페이지를 렌더링 하는 함수 1개 (Throw)
+    - “new” view function
+    - url부터 작성, view 작성, template 작성
+    
+    ```bash
+    #view
+    def new(request):
+    	return render(request, 'articles/new.html')
+    
+    #template
+    <form action="{% url 'articles:create' %}" method="GET"> # action = 데이터를 처리해줄 곳으로 보내는 것
+    	<label for="title"> title </label> 
+    	<input fype="text" name="title" id="title">   #name = Pk, id = for 와 연결
+    	<input type="submit">
+    </form>
+    ```
+    
+2. 사용자가 입력한 데이터를 전송받아 DB에 저장하는 함수 1개 (Catch)
+    - “create” view function
+    - url부터 작성, view 작성, template 작성
+    
+    ```bash
+    #view
+    def create(request):
+    	#사용자의 데이터를 받아서 DB에 저장
+    	title = request.GET.get('title')
+    	content = request.GET.get('content')
+    	
+    	# DB에 저장하는 3가지 방법
+    	# 1.
+    	article = Article()
+    	article.title = title
+    	article.content = content
+    	article.save()
+    
+    	# 2.
+    	article = Article(title=title, content=content)
+      article.save()
+    	# 3.
+    	Article.objects.create(title=title, content=content)
+    
+    	return render(request, 'articles/create.html')
+    ```
+    
+
+### NEW 캡처
+
+[new (1)](https://www.notion.so/new-1-6252ef5e3fb348bebef85f1afda2f606)
+
+[new (2)](https://www.notion.so/new-2-bf4a29edbfdf46ae9a2f491723f5a143)
+
+## Admin site
+
+개요
+
+- **Django의 가장 강력한 기능** 중 하나인 automatic admin interface알아보기
+- **“관리자페이지”**
+
+```bash
+#bash
+$python manage.py createsuperuser #슈퍼유저생성
+
+#articles/admin.py
+from .models import Article 
+
+admin.site.register(Article)
+```
