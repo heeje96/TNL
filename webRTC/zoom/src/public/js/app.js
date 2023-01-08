@@ -5,7 +5,7 @@ const muteBtn = document.getElementById("mute")
 const cameraBtn = document.getElementById("camera")
 const cameraSelect = document.getElementById("cameras")
 
-const welcome = document.getElementById("welcome")
+
 const call = document.getElementById("call")
 
 call.hidden = true
@@ -13,6 +13,8 @@ call.hidden = true
 let myStream
 let muted = false
 let cameraOff = false
+let roomName;
+let myPeerConnection
 
 async function getCameras(deviceId){
     try {
@@ -28,8 +30,8 @@ async function getCameras(deviceId){
             }
             cameraSelect.appendChild(option)
         })
-        console.log(cameras)
-        console.log(devices)
+        // console.log(cameras)
+        // console.log(devices)
 
     } catch (error) {
         console.log(error)
@@ -88,16 +90,114 @@ function handleCameraClick(){
     }
 }
 async function handleCameraChange(){
+    // 새로운 비디오 ID로 다른 스트림 생성
     await getMedia(cameraSelect.value)
+    if(myPeerConnection){
+        const videoTrack = myStream.getVideoTracks()[0]
+        const videoSender = myPeerConnection
+            .getSenders()
+            .find(sender => sender.track.kind === "video")
+        // 다른 브라우저로 보내진 비디오, 오디오 컨트롤
+        videoSender.replaceTrack(videoTrack)
+
+    }
 }
 
 muteBtn.addEventListener("click", handleMuteClick)
 cameraBtn.addEventListener("click", handleCameraClick)
 cameraSelect.addEventListener("input", handleCameraChange)
 
-welcomeForm = welcome.querySelector("form")
+// Welcome Form (join a room)
+
+const welcome = document.getElementById("welcome")
+const welcomeForm = welcome.querySelector("form")
+
+async function initCall(){
+    welcome.hidden = true
+    call.hidden = false
+    await getMedia()
+    makeConnection()
+}
+
+async function handelWelcomeSubmit(event){
+    event.preventDefault();
+    const input = welcomeForm.querySelector("input")
+    await initCall()
+    socket.emit("join_room", input.value)
+    roomName = input.value
+    input.value = ""
+}
+
+welcomeForm.addEventListener("submit", handelWelcomeSubmit)
+
+// Socket code
+
+// 방을 만든 곳
+socket.on("welcome", async ()=>{
+    const offer = await myPeerConnection.createOffer()
+    myPeerConnection.setLocalDescription(offer)
+    console.log('sent the offer')
+    socket.emit("offer", offer, roomName)
+    
+})
+
+// 응답
+socket.on("offer", async(offer) => {
+    console.log('received the offer')
+    myPeerConnection.setRemoteDescription(offer)
+    const answer = await myPeerConnection.createAnswer()
+    myPeerConnection.setLocalDescription(answer)
+    socket.emit("answer", answer, roomName)
+    console.log('sent the answer')
+})
+
+socket.on("answer", (answer) => {
+    console.log('recieve answer')
+    myPeerConnection.setRemoteDescription(answer)
+})
+
+socket.on("ice", (ice) => {
+    console.log('recieved Candidate')
+    myPeerConnection.addIceCandidate(ice)
+})
+
+// RTC Code
+
+function makeConnection(){
+    myPeerConnection = new RTCPeerConnection({
+        iceServers: [
+            {
+                urls: [
+                    "stun:stun.l.google.com:19302",
+                    "stun:stun1.l.google.com:19302",
+                    "stun:stun2.l.google.com:19302",
+                    "stun:stun3.l.google.com:19302",
+                    "stun:stun4.l.google.com:19302",
+                ],
+            },
+        ],
+    })
+    myPeerConnection.addEventListener("icecandidate", handleIce)
+    myPeerConnection.addEventListener("addstream", handleAddStream)
+    myStream
+        .getTracks()
+        .forEach(track => myPeerConnection.addTrack(track, myStream))
+}
 
 
+function handleIce(data){
+    console.log("sent candidate")
+    socket.emit("ice",data.candidate, roomName)
+    // console.log(data)
+}
+
+function handleAddStream(data){
+    const peerFace = document.getElementById("peerFace")
+    peerFace.srcObject = data.stream
+    console.log("got and event from my peer")
+    console.log("Peer's Sream", data.stream)
+    console.log("MyStream", myStream)
+}
 // CHAT Socket IO
 
 // const socket = io();

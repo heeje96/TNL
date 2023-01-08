@@ -46,11 +46,13 @@ function countRoom(roomName){
     return wsServer.sockets.adapter.rooms.get(roomName)?.size
 }
 
+
+
 wsServer.on("connection", (socket) => {
     socket["nickname"] = "Anon"
     socket.onAny((event) => {
-        console.log(wsServer.sockets.adapter)
-        console.log(`Socket Event:${event}`)
+        // console.log(wsServer.sockets.adapter)
+        // console.log(`Socket Event:${event}`)
     })
     socket.on("enter_room", (roomName, done) => {
         socket.join(roomName);
@@ -71,6 +73,21 @@ wsServer.on("connection", (socket) => {
         done();
     })
     socket.on("nickname", nickname => (socket["nickname"] = nickname))
+
+    //video
+    socket.on("join_room", (roomName) => {
+        socket.join(roomName)
+        socket.to(roomName).emit("welcome")
+    })
+    socket.on("offer", (offer, roomName) =>{
+        socket.to(roomName).emit("offer",offer)
+    })
+    socket.on("answer", (answer, roomName)=>{
+        socket.to(roomName).emit("answer", answer)
+    })
+    socket.on("ice", (ice, roomName)=>{
+        socket.to(roomName).emit("ice", ice)
+    })
 })
 
 
