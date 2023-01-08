@@ -16,4 +16,6 @@ npm run dev
 Express, Pug, app.get()
 package.json, bable, nodemon
 
-2.6까지 코드
+### https://socket.io/docs/v4/admin-ui/
+### Media Devices
+
