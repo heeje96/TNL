@@ -163,22 +163,67 @@ socket.on("ice", (ice) => {
 
 // RTC Code
 
+// Node Get ICE STUN and TURN list
+let o = {
+    format: "urls"
+};
+
+let bodyString = JSON.stringify(o);
+let https = require("https");
+let options = {
+    host: "global.xirsys.net",
+    path: "/_turn/MyFirstApp",
+    method: "PUT",
+    headers: {
+        "Authorization": "Basic " + Buffer.from("heeje:82ab192c-9279-11ed-bea5-0242ac130006").toString("base64"),
+        "Content-Type": "application/json",
+        "Content-Length": bodyString.length
+    }
+};
+let httpreq = https.request(options, function(httpres) {
+    let str = "";
+    httpres.on("data", function(data){ str += data; });
+    httpres.on("error", function(e){ console.log("error: ",e); });
+    httpres.on("end", function(){ 
+        console.log("ICE List: ", str);
+    });
+});
+httpreq.on("error", function(e){ console.log("request error: ",e); });
+httpreq.end();
+console.log(temp)
+
 function makeConnection(){
     myPeerConnection = new RTCPeerConnection({
-        iceServers: [
-            {
-                urls: [
-                    "stun:stun.l.google.com:19302",
-                    "stun:stun1.l.google.com:19302",
-                    "stun:stun2.l.google.com:19302",
-                    "stun:stun3.l.google.com:19302",
-                    "stun:stun4.l.google.com:19302",
-                ],
-            },
-        ],
+        
+        iceServers: [{
+            urls: [ "stun:ntk-turn-2.xirsys.com" ]
+         }, {
+            username: "i6IJUYY7msLuAO-UkGxLCT1AVOHFXmdPb9aLS7fnqNlJIdFQXnp5igmgid2L-ix1AAAAAGPACiJoZWVqZQ==",
+            credential: "7da942ca-927c-11ed-88e3-0242ac120004",
+            urls: [
+                "turn:ntk-turn-2.xirsys.com:80?transport=udp",
+                "turn:ntk-turn-2.xirsys.com:3478?transport=udp",
+                "turn:ntk-turn-2.xirsys.com:80?transport=tcp",
+                "turn:ntk-turn-2.xirsys.com:3478?transport=tcp",
+                "turns:ntk-turn-2.xirsys.com:443?transport=tcp",
+                "turns:ntk-turn-2.xirsys.com:5349?transport=tcp"
+            ]
+         }]
+        // iceServers: [
+        //     {
+        //         urls: [
+        //             "stun:stun.l.google.com:19302",
+        //             "stun:stun1.l.google.com:19302",
+        //             "stun:stun2.l.google.com:19302",
+        //             "stun:stun3.l.google.com:19302",
+        //             "stun:stun4.l.google.com:19302",
+        //         ],
+        //     },
+        // ],
     })
     myPeerConnection.addEventListener("icecandidate", handleIce)
-    myPeerConnection.addEventListener("addstream", handleAddStream)
+    myPeerConnection.addEventListener("track", handleTrack)
+    // myPeerConnection.addEventListener("addstream", handleAddStream)
     myStream
         .getTracks()
         .forEach(track => myPeerConnection.addTrack(track, myStream))
@@ -197,6 +242,12 @@ function handleAddStream(data){
     console.log("got and event from my peer")
     console.log("Peer's Sream", data.stream)
     console.log("MyStream", myStream)
+}
+
+function handleTrack(data) {
+    console.log("handle track")
+    const peerFace = document.querySelector("#peerFace")
+    peerFace.srcObject = data.streams[0]
 }
 // CHAT Socket IO
 

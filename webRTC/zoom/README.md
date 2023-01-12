@@ -12,6 +12,8 @@ npm i pug
 npm i socket.io
 npm run dev
 npm i -g localtunnel
+
+lt --port 3000
 ```
 
 Express, Pug, app.get()
